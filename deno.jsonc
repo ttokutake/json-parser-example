@@ -1,0 +1,7 @@
+{
+  "imports": {
+    // The dollar sign in front of "std" isn't special - it's an optional
+    // convention to show that $std is an alias set up in an import map
+    "$std/": "https://deno.land/std@0.224.0/"
+  }
+}

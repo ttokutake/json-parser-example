@@ -31,7 +31,7 @@ class JSONParser {
     return this.json.charAt(this.index++);
   }
 
-  private skipWhitespace() {
+  private skipWhitespaces() {
     while (this.isInProgress() && this.getChar().match(/\s/)) {
       this.index++;
     }
@@ -107,14 +107,14 @@ class JSONParser {
   private parseArray() {
     const a: JsonObject[] = [];
     this.readChar(); // 最初の '[' を読み飛ばす
-    this.skipWhitespace();
+    this.skipWhitespaces();
     if (this.getChar() === ARRAY_END) {
       this.index++;
       return a; // 空の配列
     }
     while (this.isInProgress()) {
       a.push(this.parseValue());
-      this.skipWhitespace();
+      this.skipWhitespaces();
       // TODO: 空文字列が返ってきた場合
       const c = this.readChar();
       if (c === ARRAY_END) {
@@ -123,7 +123,7 @@ class JSONParser {
       if (c !== ELEMENT_DELIMITER) {
         throw new SyntaxError("Invalid array");
       }
-      this.skipWhitespace();
+      this.skipWhitespaces();
     }
     return a;
   }
@@ -131,19 +131,19 @@ class JSONParser {
   private parseObject() {
     const o: JsonObject = {};
     this.readChar(); // 最初の '{' を読み飛ばす
-    this.skipWhitespace();
+    this.skipWhitespaces();
     if (this.getChar() === OBJECT_END) {
       this.index++;
       return o; // 空のオブジェクト
     }
     while (this.isInProgress()) {
       const key = this.parseString();
-      this.skipWhitespace();
+      this.skipWhitespaces();
       // TODO: 空文字列が返ってきた場合 & ':'じゃない場合
       this.readChar(); // ':' を読み飛ばす
-      this.skipWhitespace();
+      this.skipWhitespaces();
       o[key] = this.parseValue();
-      this.skipWhitespace();
+      this.skipWhitespaces();
       // TODO: 空文字列が返ってきた場合
       const c = this.readChar();
       if (c === OBJECT_END) {
@@ -152,13 +152,13 @@ class JSONParser {
       if (c !== ELEMENT_DELIMITER) {
         throw new SyntaxError("Invalid object");
       }
-      this.skipWhitespace();
+      this.skipWhitespaces();
     }
     return o;
   }
 
   parseValue() {
-    this.skipWhitespace();
+    this.skipWhitespaces();
     const c = this.getChar();
     // TODO: switchの条件自体もparseXXX()に閉じ込める実装にしたい
     switch (c) {

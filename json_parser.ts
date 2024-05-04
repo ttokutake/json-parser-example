@@ -31,13 +31,23 @@ class JSONParser {
     return this.json.charAt(this.index++);
   }
 
+  private skipChar() {
+    this.index++;
+  }
+
   private skipWhitespaces() {
     while (this.isInProgress() && this.getChar().match(/\s/)) {
       this.index++;
     }
   }
 
-  // TODO: parseNull, ParseTrue, ParseFalse
+  private parseNull() {
+    // TODO
+  }
+
+  private parseBoolean() {
+    // TODO
+  }
 
   private parseNumber() {
     let s = "";
@@ -75,7 +85,7 @@ class JSONParser {
   }
 
   private parseString() {
-    this.readChar(); // 最初の引用符を読み飛ばす
+    this.skipChar(); // 最初の引用符を読み飛ばす
 
     let s = "";
     let c;
@@ -106,10 +116,10 @@ class JSONParser {
 
   private parseArray() {
     const a: JsonObject[] = [];
-    this.readChar(); // 最初の '[' を読み飛ばす
+    this.skipChar(); // 最初の '[' を読み飛ばす
     this.skipWhitespaces();
     if (this.getChar() === ARRAY_END) {
-      this.index++;
+      this.skipChar();
       return a; // 空の配列
     }
     while (this.isInProgress()) {
@@ -130,17 +140,17 @@ class JSONParser {
 
   private parseObject() {
     const o: JsonObject = {};
-    this.readChar(); // 最初の '{' を読み飛ばす
+    this.skipChar(); // 最初の '{' を読み飛ばす
     this.skipWhitespaces();
     if (this.getChar() === OBJECT_END) {
-      this.index++;
+      this.skipChar();
       return o; // 空のオブジェクト
     }
     while (this.isInProgress()) {
       const key = this.parseString();
       this.skipWhitespaces();
       // TODO: 空文字列が返ってきた場合 & ':'じゃない場合
-      this.readChar(); // ':' を読み飛ばす
+      this.skipChar(); // ':' を読み飛ばす
       this.skipWhitespaces();
       o[key] = this.parseValue();
       this.skipWhitespaces();

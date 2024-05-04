@@ -4,6 +4,12 @@ import { assertEquals, assertThrows } from "$std/assert/mod.ts";
 import { describe, it } from "$std/testing/bdd.ts";
 
 describe("JSONParser", () => {
+  describe("parseNull()", () => {
+  });
+
+  describe("parseBoolean()", () => {
+  });
+
   describe("parseNumber()", () => {
     [
       "0",
@@ -127,6 +133,12 @@ describe("JSONParser", () => {
         assertThrows(() => JSON.parse(input), SyntaxError);
       });
     });
+  });
+
+  describe("parseArray()", () => {
+  });
+
+  describe("parseObject()", () => {
   });
 });
 

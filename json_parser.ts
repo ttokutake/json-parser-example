@@ -42,15 +42,9 @@ class JSONParser {
   private parseNumber() {
     let s = "";
 
-    if (this.getChar() === '-') {
+    if (this.getChar() === "-") {
       s += this.readChar();
     }
-
-    // 数字の先頭は0以外の数字のみ
-    if (!this.getChar().match(/^[1-9]$/)) {
-      throw new SyntaxError("Not a valid number");
-    }
-    s += this.readChar();
 
     while (this.getChar().match(/^\d$/)) {
       s += this.readChar();
@@ -59,17 +53,22 @@ class JSONParser {
     if (this.getChar() === ".") {
       s += this.readChar();
 
-      if (!this.getChar().match(/^\d$/)) {
-        throw new SyntaxError("Unterminated fractional number");
-      }
-
       while (this.getChar().match(/^\d$/)) {
         s += this.readChar();
       }
     }
 
+    if (s === "") {
+      throw new Error("Implementation error");
+    }
     if (s === "-") {
-      throw new SyntaxError("Only minus symbol");
+      throw new SyntaxError("Minus sign alone");
+    }
+    if (s.match(/^-?0\d+/)) {
+      throw new SyntaxError("Unneeded leading zero");
+    }
+    if (s.match(/\.$/)) {
+      throw new SyntaxError("Lack of decimal part");
     }
 
     return parseFloat(s);

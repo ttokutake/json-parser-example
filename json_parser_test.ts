@@ -48,7 +48,7 @@ describe("JSONParser", () => {
       });
     });
 
-    it(`throws an SyntaxError for minus sign alone`, () => {
+    it('throws an SyntaxError with "Minus sign alone"', () => {
       const input = "-";
       assertThrows(
         () => parseJSON(input),
@@ -64,7 +64,7 @@ describe("JSONParser", () => {
       "-00",
       "-01",
     ].forEach((input) => {
-      it(`throws an SyntaxError for unneeded leading zero`, () => {
+      it('throws an SyntaxError for "Unneeded leading zero"', () => {
         assertThrows(
           () => parseJSON(input),
           SyntaxError,
@@ -74,7 +74,7 @@ describe("JSONParser", () => {
       });
     });
 
-    it(`throws an SyntaxError for lack of decimal part`, () => {
+    it('throws an SyntaxError for "Lack of decimal part"', () => {
       const input = "0.";
       assertThrows(
         () => parseJSON(input),
@@ -82,6 +82,50 @@ describe("JSONParser", () => {
         "Lack of decimal part",
       );
       assertThrows(() => JSON.parse(input), SyntaxError);
+    });
+  });
+
+  describe("parseString()", () => {
+    [
+      '""',
+      '"a"',
+      '"ab"',
+      '"\\\\"',
+    ].forEach((input) => {
+      it(`parses the string "${input}"`, () => {
+        const output = parseJSON(input);
+        const expected = JSON.parse(input);
+        assertEquals(output, expected);
+      });
+    });
+
+    [
+      '"\\',
+      '"\\"',
+      '"\\\\\\"',
+    ].forEach((input) => {
+      it('throws an SyntaxError for "Escape character exists"', () => {
+        assertThrows(
+          () => parseJSON(input),
+          SyntaxError,
+          "Escape character exists",
+        );
+        assertThrows(() => JSON.parse(input), SyntaxError);
+      });
+    });
+
+    [
+      '"',
+      '"a',
+    ].forEach((input) => {
+      it('throws an SyntaxError for "Closing quote not exist"', () => {
+        assertThrows(
+          () => parseJSON(input),
+          SyntaxError,
+          "Closing quote not exist",
+        );
+        assertThrows(() => JSON.parse(input), SyntaxError);
+      });
     });
   });
 });

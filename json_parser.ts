@@ -52,10 +52,10 @@ class JSONParser {
 
     if (this.getChar() === ".") {
       s += this.readChar();
+    }
 
-      while (this.getChar().match(/^\d$/)) {
-        s += this.readChar();
-      }
+    while (this.getChar().match(/^\d$/)) {
+      s += this.readChar();
     }
 
     if (s === "") {
@@ -75,17 +75,32 @@ class JSONParser {
   }
 
   private parseString() {
-    let c;
+    this.readChar(); // 最初の引用符を読み飛ばす
+
     let s = "";
-    const quote = this.readChar(); // 最初の引用符を読み飛ばす
-    while (this.isInProgress() && (c = this.readChar()) !== quote) {
+    let c;
+    while (this.isInProgress()) {
+      c = this.readChar();
+      if (c === QUOTE) {
+        break;
+      }
       if (c === "\\") {
-        // TODO: 空文字列が返ってきた場合
-        s += this.readChar(); // TODO: エスケープ文字の処理
+        if (this.getChar() !== "\\") {
+          throw new SyntaxError("Escape character exists");
+        }
+        // TODO: 制御文字のチェック
+        // > JSON.parse('"\\a"')
+        // Uncaught SyntaxError: Bad escaped character in JSON at position 2 (line 1 column 3)
+        s += this.readChar();
       } else {
         s += c;
       }
     }
+
+    if (c !== QUOTE) {
+      throw new SyntaxError("Closing quote not exist");
+    }
+
     return s;
   }
 

@@ -41,10 +41,37 @@ class JSONParser {
 
   private parseNumber() {
     let s = "";
-    // TODO: 小数点の対応
-    while (this.isInProgress() && this.getChar().match(/\d/)) {
+
+    if (this.getChar() === '-') {
       s += this.readChar();
     }
+
+    // 数字の先頭は0以外の数字のみ
+    if (!this.getChar().match(/^[1-9]$/)) {
+      throw new SyntaxError("Not a valid number");
+    }
+    s += this.readChar();
+
+    while (this.getChar().match(/^\d$/)) {
+      s += this.readChar();
+    }
+
+    if (this.getChar() === ".") {
+      s += this.readChar();
+
+      if (!this.getChar().match(/^\d$/)) {
+        throw new SyntaxError("Unterminated fractional number");
+      }
+
+      while (this.getChar().match(/^\d$/)) {
+        s += this.readChar();
+      }
+    }
+
+    if (s === "-") {
+      throw new SyntaxError("Only minus symbol");
+    }
+
     return parseFloat(s);
   }
 
@@ -119,6 +146,7 @@ class JSONParser {
   parseValue() {
     this.skipWhitespace();
     const c = this.getChar();
+    // TODO: switchの条件自体もparseXXX()に閉じ込める実装にしたい
     switch (c) {
       case OBJECT_START:
         return this.parseObject();

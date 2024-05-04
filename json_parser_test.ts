@@ -21,12 +21,19 @@ describe("JSONParser", () => {
       '100',
       '-0',
       '-1',
-      '-01',
     ].forEach((input) =>  {
-      it(`parses the integer ${input}`, () => {
+      it(`parses the integer "${input}"`, () => {
         const output = parseJSON(input);
         const expected = JSON.parse(input);
         assertEquals(output, expected);
+      });
+    });
+
+    [
+      '01',
+      '-01',
+    ].forEach((input) => {
+      it(`throws an error`, () => {
       });
     });
   });

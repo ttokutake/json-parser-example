@@ -6,11 +6,11 @@ export type JsonObject =
   | JsonObject[];
 
 const QUOTE = '"';
+const ELEMENT_DELIMITER = ",";
 const ARRAY_START = "[";
-const ARRAY_DELIMITER = ",";
 const ARRAY_END = "]";
 const OBJECT_START = "{";
-const OBJECT_DELIMITER = ",";
+const OBJECT_KEY_DELIMITER = ":";
 const OBJECT_END = "}";
 
 class JSONParser {
@@ -79,7 +79,7 @@ class JSONParser {
       if (c === ARRAY_END) {
         break;
       }
-      if (c !== ARRAY_DELIMITER) {
+      if (c !== ELEMENT_DELIMITER) {
         throw new SyntaxError("Invalid array");
       }
       this.skipWhitespace();
@@ -108,7 +108,7 @@ class JSONParser {
       if (c === OBJECT_END) {
         break;
       }
-      if (c !== OBJECT_DELIMITER) {
+      if (c !== ELEMENT_DELIMITER) {
         throw new SyntaxError("Invalid object");
       }
       this.skipWhitespace();

@@ -6,14 +6,45 @@ export type JsonObject =
   | { [key: string]: JsonObject }
   | JsonObject[];
 
-const NULL_START = "n";
-const TRUE_START = "t";
-const FALSE_START = "f";
-const MINUS = "-";
-const NUMBER_REGEX = /^\d$/;
-const QUOTE = '"';
-const ARRAY_START = "[";
-const OBJECT_START = "{";
+type ResultParse = {
+  done: boolean;
+  value: JsonObject;
+};
+
+type ResultUndone = {
+  done: false;
+  value: null;
+};
+
+type ResultParseNull = {
+  done: boolean;
+  value: null;
+};
+
+type ResultParseBoolean = {
+  done: true;
+  value: boolean;
+} | ResultUndone;
+
+type ResultParseNumber = {
+  done: true;
+  value: number;
+} | ResultUndone;
+
+type ResultParseString = {
+  done: true;
+  value: string;
+} | ResultUndone;
+
+type ResultParseArray = {
+  done: true;
+  value: JsonObject[];
+} | ResultUndone;
+
+type ResultParseObject = {
+  done: true;
+  value: { [key: string]: JsonObject };
+} | ResultUndone;
 
 class JSONParser {
   private index: number;
@@ -54,30 +85,60 @@ class JSONParser {
     }
   }
 
-  private parseNull() {
+  private parseNull(): ResultParseNull {
+    this.skipWhitespaces();
+    if (!this.isInProgress()) {
+      throw new SyntaxError("Unexpected end of input");
+    }
+
+    const capital = this.getChar();
+    if (capital !== "n") {
+      return { done: false, value: null };
+    }
+
     const s = this.readChars(4);
     if (s !== "null") {
       throw new SyntaxError(`Unexpected token "${s}"`);
     }
-    return null;
+    return { done: true, value: null };
   }
 
-  private parseBoolean() {
-    const s = this.readChars(this.getChar() === TRUE_START ? 4 : 5);
+  private parseBoolean(): ResultParseBoolean {
+    this.skipWhitespaces();
+    if (!this.isInProgress()) {
+      throw new SyntaxError("Unexpected end of input");
+    }
+
+    const capital = this.getChar();
+    if (!["t", "f"].includes(capital)) {
+      return { done: false, value: null };
+    }
+
+    const s = this.readChars(this.getChar() === "t" ? 4 : 5);
     if (!["true", "false"].includes(s)) {
       throw new SyntaxError(`Unexpected token "${s}"`);
     }
-    return s === "true" ? true : false;
+    return { done: true, value: (s === "true" ? true : false) };
   }
 
-  private parseNumber() {
+  private parseNumber(): ResultParseNumber {
+    this.skipWhitespaces();
+    if (!this.isInProgress()) {
+      throw new SyntaxError("Unexpected end of input");
+    }
+
+    const capital = this.getChar();
+    if (!(capital === "-" || capital.match(/^\d$/))) {
+      return { done: false, value: null };
+    }
+
     let s = "";
 
-    if (this.getChar() === MINUS) {
+    if (this.getChar() === "-") {
       s += this.readChar();
     }
 
-    while (this.getChar().match(NUMBER_REGEX)) {
+    while (this.getChar().match(/^\d$/)) {
       s += this.readChar();
     }
 
@@ -85,14 +146,14 @@ class JSONParser {
       s += this.readChar();
     }
 
-    while (this.getChar().match(NUMBER_REGEX)) {
+    while (this.getChar().match(/^\d$/)) {
       s += this.readChar();
     }
 
     if (s === "") {
       throw new Error("Implementation error");
     }
-    if (s === MINUS) {
+    if (s === "-") {
       throw new SyntaxError("Minus sign alone");
     }
     if (s.match(/^-?0\d+/)) {
@@ -105,17 +166,27 @@ class JSONParser {
       throw new SyntaxError("Lack of decimal part");
     }
 
-    return parseFloat(s);
+    return { done: true, value: parseFloat(s) };
   }
 
-  private parseString() {
-    this.skipChar(); // 最初の引用符を読み飛ばす
+  private parseString(): ResultParseString {
+    this.skipWhitespaces();
+    if (!this.isInProgress()) {
+      throw new SyntaxError("Unexpected end of input");
+    }
+
+    const capital = this.getChar();
+    if (capital !== '"') {
+      return { done: false, value: null };
+    }
+
+    this.skipChar();
 
     let s = "";
     let c = "";
     while (this.isInProgress()) {
       c = this.readChar();
-      if (c === QUOTE) {
+      if (c === '"') {
         break;
       }
       if (c === "\\") {
@@ -131,22 +202,32 @@ class JSONParser {
       s += c;
     }
 
-    if (c !== QUOTE) {
+    if (c !== '"') {
       throw new SyntaxError("Closing quote not exist");
     }
 
-    return s;
+    return { done: true, value: s };
   }
 
-  private parseArray() {
-    this.skipChar(); // 最初の '[' を読み飛ばす
+  private parseArray(): ResultParseArray {
+    this.skipWhitespaces();
+    if (!this.isInProgress()) {
+      throw new SyntaxError("Unexpected end of input");
+    }
+
+    const capital = this.getChar();
+    if (capital !== "[") {
+      return { done: false, value: null };
+    }
+
+    this.skipChar();
     this.skipWhitespaces();
 
     const a: JsonObject[] = [];
 
     if (this.getChar() === "]") {
       this.skipChar();
-      return a; // 空の配列
+      return { done: true, value: a }; // 空の配列
     }
 
     while (true) {
@@ -166,30 +247,39 @@ class JSONParser {
       }
     }
 
-    return a;
+    return { done: true, value: a };
   }
 
-  private parseObject() {
-    this.skipChar(); // 最初の '{' を読み飛ばす
+  private parseObject(): ResultParseObject {
+    this.skipWhitespaces();
+    if (!this.isInProgress()) {
+      throw new SyntaxError("Unexpected end of input");
+    }
+
+    const capital = this.getChar();
+    if (capital !== "{") {
+      return { done: false, value: null };
+    }
+
+    this.skipChar();
     this.skipWhitespaces();
 
     const o: JsonObject = {};
 
     if (this.getChar() === "}") {
       this.skipChar();
-      return o; // 空のオブジェクト
+      return { done: true, value: o }; // 空のオブジェクト
     }
 
     while (true) {
-      this.skipWhitespaces();
-      if (this.getChar() !== QUOTE) {
-        throw new SyntaxError(`Lack of quote`);
+      const { done, value: key } = this.parseString();
+      if (!done) {
+        throw new SyntaxError("Non-string key");
       }
-      const key = this.parseString();
 
       this.skipWhitespaces();
       if (!this.isInProgress()) {
-        throw new SyntaxError(`Lack of colon`);
+        throw new SyntaxError("Lack of colon");
       }
 
       const colon = this.readChar();
@@ -201,7 +291,7 @@ class JSONParser {
 
       this.skipWhitespaces();
       if (!this.isInProgress()) {
-        throw new SyntaxError(`Lack of closing brace`);
+        throw new SyntaxError("Lack of closing brace");
       }
 
       const c = this.readChar();
@@ -213,36 +303,42 @@ class JSONParser {
       }
     }
 
-    return o;
+    return { done: true, value: o };
   }
 
   parseValue() {
-    this.skipWhitespaces();
+    let { done, value }: ResultParse = this.parseObject();
+    if (done) {
+      return value;
+    }
 
-    if (!this.isInProgress()) {
-      throw new SyntaxError("Unexpected end of input");
+    ({ done, value } = this.parseArray());
+    if (done) {
+      return value;
+    }
+
+    ({ done, value } = this.parseNull());
+    if (done) {
+      return value;
+    }
+
+    ({ done, value } = this.parseBoolean());
+    if (done) {
+      return value;
+    }
+
+    ({ done, value } = this.parseNumber());
+    if (done) {
+      return value;
+    }
+
+    ({ done, value } = this.parseString());
+    if (done) {
+      return value;
     }
 
     const c = this.getChar();
-    // TODO: switchの条件自体もparseXXX()に閉じ込める実装にしたい
-    switch (c) {
-      case OBJECT_START:
-        return this.parseObject();
-      case ARRAY_START:
-        return this.parseArray();
-      case QUOTE:
-        return this.parseString();
-      case NULL_START:
-        return this.parseNull();
-      case TRUE_START:
-      case FALSE_START:
-        return this.parseBoolean();
-      default:
-        if (c === MINUS || c.match(NUMBER_REGEX)) {
-          return this.parseNumber();
-        }
-        throw new SyntaxError(`Unexpected token ${c}`);
-    }
+    throw new SyntaxError(`Unexpected token ${c}`);
   }
 }
 

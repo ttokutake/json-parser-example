@@ -282,11 +282,11 @@ describe("JSONParser", () => {
       '{"":1,:2}',
       '{"a":1,b:2}',
     ].forEach((input) => {
-      it(`throws a SyntaxError with "Lack of quote" against "${input}"`, () => {
+      it(`throws a SyntaxError with "Non-string key" against "${input}"`, () => {
         assertThrows(
           () => parseJSON(input),
           SyntaxError,
-          "Lack of quote",
+          "Non-string key",
         );
         assertThrows(() => JSON.parse(input), SyntaxError);
       });
@@ -365,6 +365,7 @@ describe("JSONParser", () => {
 });
 
 describe("parseJSON()", () => {
+  // TODO: "{}{}", "{} ", 全部の型を含めるinput, "a", "(", ""
   it("parses a JSON string", () => {
     const input =
       '{"name":"John Doe","age":30,"city":"Tokyo","hobbies":["reading","hiking","coding"]}';

@@ -54,7 +54,7 @@ describe("JSONParser", () => {
       });
     });
 
-    it('throws an SyntaxError with "Minus sign alone"', () => {
+    it(`throws an SyntaxError with "Minus sign alone" against "-"`, () => {
       const input = "-";
       assertThrows(
         () => parseJSON(input),
@@ -70,7 +70,7 @@ describe("JSONParser", () => {
       "-00",
       "-01",
     ].forEach((input) => {
-      it('throws an SyntaxError for "Unneeded leading zero"', () => {
+      it(`throws an SyntaxError with "Unneeded leading zero" against "${input}"`, () => {
         assertThrows(
           () => parseJSON(input),
           SyntaxError,
@@ -80,7 +80,7 @@ describe("JSONParser", () => {
       });
     });
 
-    it('throws an SyntaxError for "Lack of decimal part"', () => {
+    it(`throws an SyntaxError with "Lack of decimal part" against "0."`, () => {
       const input = "0.";
       assertThrows(
         () => parseJSON(input),
@@ -97,6 +97,7 @@ describe("JSONParser", () => {
       '"a"',
       '"ab"',
       '"\\\\"',
+      '"\\""',
     ].forEach((input) => {
       it(`parses the string "${input}"`, () => {
         const output = parseJSON(input);
@@ -107,10 +108,10 @@ describe("JSONParser", () => {
 
     [
       '"\\',
-      '"\\"',
-      '"\\\\\\"',
+      '"\\a"',
+      '"\\\\\\a"',
     ].forEach((input) => {
-      it('throws an SyntaxError for "Escape character exists"', () => {
+      it(`throws an SyntaxError with "Escape character exists" against "${input}"`, () => {
         assertThrows(
           () => parseJSON(input),
           SyntaxError,
@@ -124,7 +125,7 @@ describe("JSONParser", () => {
       '"',
       '"a',
     ].forEach((input) => {
-      it('throws an SyntaxError for "Closing quote not exist"', () => {
+      it(`throws an SyntaxError with "Closing quote not exist" against "${input}"`, () => {
         assertThrows(
           () => parseJSON(input),
           SyntaxError,

@@ -95,7 +95,7 @@ class JSONParser {
         break;
       }
       if (c === "\\") {
-        if (this.getChar() !== "\\") {
+        if (!["\\", '"'].includes(this.getChar())) {
           throw new SyntaxError("Escape character exists");
         }
         // TODO: 制御文字のチェック

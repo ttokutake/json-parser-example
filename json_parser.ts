@@ -98,6 +98,9 @@ class JSONParser {
     if (s.match(/^-?0\d+/)) {
       throw new SyntaxError("Unneeded leading zero");
     }
+    if (s.match(/^-\./)) {
+      throw new SyntaxError("Lack of integer part");
+    }
     if (s.match(/\.$/)) {
       throw new SyntaxError("Lack of decimal part");
     }

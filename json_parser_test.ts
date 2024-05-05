@@ -130,6 +130,20 @@ describe("JSONParser", () => {
       });
     });
 
+    [
+      "-.",
+      "-.0",
+    ].forEach((input) => {
+      it(`throws a SyntaxError with "Lack of integer part" against "${input}"`, () => {
+        assertThrows(
+          () => parseJSON(input),
+          SyntaxError,
+          "Lack of integer part",
+        );
+        assertThrows(() => JSON.parse(input), SyntaxError);
+      });
+    });
+
     it(`throws a SyntaxError with "Lack of decimal part" against "0."`, () => {
       const input = "0.";
       assertThrows(

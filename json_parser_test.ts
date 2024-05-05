@@ -201,6 +201,60 @@ describe("JSONParser", () => {
   });
 
   describe("parseArray()", () => {
+    [
+      "[]",
+      "[ ]",
+      "[ 1]",
+      "[1 ]",
+      "[1,2]",
+      "[1 ,2]",
+      "[1, 2]",
+      "[1,2,3]",
+    ].forEach((input) => {
+      it(`parses the array "${input}"`, () => {
+        const output = parseJSON(input);
+        const expected = JSON.parse(input);
+        assertEquals(output, expected);
+      });
+    });
+
+    it('throws a SyntaxError with "Unexpected end of input"', () => {
+      const input = "[";
+      assertThrows(
+        () => parseJSON(input),
+        SyntaxError,
+        "Unexpected end of input",
+      );
+      assertThrows(() => JSON.parse(input), SyntaxError);
+    });
+
+    [
+      "[1",
+      "[1,2",
+    ].forEach((input) => {
+      it(`throws a SyntaxError with "Lack of closing bracket" against "${input}"`, () => {
+        assertThrows(
+          () => parseJSON(input),
+          SyntaxError,
+          "Lack of closing bracket",
+        );
+        assertThrows(() => JSON.parse(input), SyntaxError);
+      });
+    });
+
+    [
+      "[1;",
+      "[1,2;",
+    ].forEach((input) => {
+      it(`throws a SyntaxError with "Unexpected token" against "${input}"`, () => {
+        assertThrows(
+          () => parseJSON(input),
+          SyntaxError,
+          `Unexpected token ";"`,
+        );
+        assertThrows(() => JSON.parse(input), SyntaxError);
+      });
+    });
   });
 
   describe("parseObject()", () => {

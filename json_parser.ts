@@ -112,7 +112,7 @@ class JSONParser {
     this.skipChar(); // 最初の引用符を読み飛ばす
 
     let s = "";
-    let c;
+    let c = "";
     while (this.isInProgress()) {
       c = this.readChar();
       if (c === QUOTE) {
@@ -126,9 +126,9 @@ class JSONParser {
         // > JSON.parse('"\\a"')
         // Uncaught SyntaxError: Bad escaped character in JSON at position 2 (line 1 column 3)
         s += this.readChar();
-      } else {
-        s += c;
+        continue;
       }
+      s += c;
     }
 
     if (c !== QUOTE) {
@@ -139,26 +139,35 @@ class JSONParser {
   }
 
   private parseArray() {
-    const a: JsonObject[] = [];
     this.skipChar(); // 最初の '[' を読み飛ばす
     this.skipWhitespaces();
+
+    const a: JsonObject[] = [];
+
     if (this.getChar() === ARRAY_END) {
       this.skipChar();
       return a; // 空の配列
     }
-    while (this.isInProgress()) {
+
+    let c = "";
+    while (true) {
       a.push(this.parseValue());
+
       this.skipWhitespaces();
-      // TODO: 空文字列が返ってきた場合
-      const c = this.readChar();
+
+      if (!this.isInProgress()) {
+        throw new SyntaxError("Lack of closing bracket");
+      }
+
+      c = this.readChar();
       if (c === ARRAY_END) {
         break;
       }
       if (c !== ELEMENT_DELIMITER) {
-        throw new SyntaxError("Invalid array");
+        throw new SyntaxError(`Unexpected token "${c}"`);
       }
-      this.skipWhitespaces();
     }
+
     return a;
   }
 
@@ -193,6 +202,11 @@ class JSONParser {
 
   parseValue() {
     this.skipWhitespaces();
+
+    if (!this.isInProgress()) {
+      throw new SyntaxError("Unexpected end of input");
+    }
+
     const c = this.getChar();
     // TODO: switchの条件自体もparseXXX()に閉じ込める実装にしたい
     switch (c) {
@@ -207,9 +221,11 @@ class JSONParser {
       case TRUE_START:
       case FALSE_START:
         return this.parseBoolean();
-      // TODO: 0-9 & -
       default:
-        return this.parseNumber();
+        if (c === "-" || c.match(/^\d$/)) {
+          return this.parseNumber();
+        }
+        throw new SyntaxError(`Unexpected token ${c}`);
     }
   }
 }

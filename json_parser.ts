@@ -6,18 +6,16 @@ export type JsonObject =
   | { [key: string]: JsonObject }
   | JsonObject[];
 
-const NULL = "null";
 const NULL_START = "n";
-const TRUE = "true";
 const TRUE_START = "t";
-const FALSE = "false";
 const FALSE_START = "f";
+const MINUS = "-";
+const NUMBER_REGEX = /^\d$/;
 const QUOTE = '"';
 const ELEMENT_DELIMITER = ",";
 const ARRAY_START = "[";
 const ARRAY_END = "]";
 const OBJECT_START = "{";
-const OBJECT_KEY_DELIMITER = ":";
 const OBJECT_END = "}";
 
 class JSONParser {
@@ -49,14 +47,14 @@ class JSONParser {
   }
 
   private skipWhitespaces() {
-    while (this.isInProgress() && this.getChar().match(/\s/)) {
+    while (this.isInProgress() && this.getChar().match(/^\s$/)) {
       this.index++;
     }
   }
 
   private parseNull() {
     const s = this.readChars(4);
-    if (s !== NULL) {
+    if (s !== "null") {
       throw new SyntaxError(`Unexpected token "${s}"`);
     }
     return null;
@@ -64,20 +62,20 @@ class JSONParser {
 
   private parseBoolean() {
     const s = this.readChars(this.getChar() === TRUE_START ? 4 : 5);
-    if (![TRUE, FALSE].includes(s)) {
+    if (!["true", "false"].includes(s)) {
       throw new SyntaxError(`Unexpected token "${s}"`);
     }
-    return s === TRUE ? true : false;
+    return s === "true" ? true : false;
   }
 
   private parseNumber() {
     let s = "";
 
-    if (this.getChar() === "-") {
+    if (this.getChar() === MINUS) {
       s += this.readChar();
     }
 
-    while (this.getChar().match(/^\d$/)) {
+    while (this.getChar().match(NUMBER_REGEX)) {
       s += this.readChar();
     }
 
@@ -85,14 +83,14 @@ class JSONParser {
       s += this.readChar();
     }
 
-    while (this.getChar().match(/^\d$/)) {
+    while (this.getChar().match(NUMBER_REGEX)) {
       s += this.readChar();
     }
 
     if (s === "") {
       throw new Error("Implementation error");
     }
-    if (s === "-") {
+    if (s === MINUS) {
       throw new SyntaxError("Minus sign alone");
     }
     if (s.match(/^-?0\d+/)) {
@@ -149,17 +147,15 @@ class JSONParser {
       return a; // 空の配列
     }
 
-    let c = "";
     while (true) {
       a.push(this.parseValue());
 
       this.skipWhitespaces();
-
       if (!this.isInProgress()) {
         throw new SyntaxError("Lack of closing bracket");
       }
 
-      c = this.readChar();
+      const c = this.readChar();
       if (c === ARRAY_END) {
         break;
       }
@@ -172,31 +168,49 @@ class JSONParser {
   }
 
   private parseObject() {
-    const o: JsonObject = {};
     this.skipChar(); // 最初の '{' を読み飛ばす
     this.skipWhitespaces();
+
+    const o: JsonObject = {};
+
     if (this.getChar() === OBJECT_END) {
       this.skipChar();
       return o; // 空のオブジェクト
     }
-    while (this.isInProgress()) {
+
+    while (true) {
+      this.skipWhitespaces();
+      if (this.getChar() !== QUOTE) {
+        throw new SyntaxError(`Lack of quote`);
+      }
       const key = this.parseString();
+
       this.skipWhitespaces();
-      // TODO: 空文字列が返ってきた場合 & ':'じゃない場合
-      this.skipChar(); // ':' を読み飛ばす
-      this.skipWhitespaces();
+      if (!this.isInProgress()) {
+        throw new SyntaxError(`Lack of colon`);
+      }
+
+      const colon = this.readChar();
+      if (colon !== ":") {
+        throw new SyntaxError(`Unexpected token "${colon}"`);
+      }
+
       o[key] = this.parseValue();
+
       this.skipWhitespaces();
-      // TODO: 空文字列が返ってきた場合
+      if (!this.isInProgress()) {
+        throw new SyntaxError(`Lack of closing brace`);
+      }
+
       const c = this.readChar();
       if (c === OBJECT_END) {
         break;
       }
       if (c !== ELEMENT_DELIMITER) {
-        throw new SyntaxError("Invalid object");
+        throw new SyntaxError(`Unexpected token "${c}"`);
       }
-      this.skipWhitespaces();
     }
+
     return o;
   }
 
@@ -222,7 +236,7 @@ class JSONParser {
       case FALSE_START:
         return this.parseBoolean();
       default:
-        if (c === "-" || c.match(/^\d$/)) {
+        if (c === MINUS || c.match(NUMBER_REGEX)) {
           return this.parseNumber();
         }
         throw new SyntaxError(`Unexpected token ${c}`);

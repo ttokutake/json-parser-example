@@ -104,7 +104,7 @@ describe("JSONParser", () => {
       });
     });
 
-    it(`throws a SyntaxError with "Minus sign alone" against "-"`, () => {
+    it('throws a SyntaxError with "Minus sign alone" against "-"', () => {
       const input = "-";
       assertThrows(
         () => parseJSON(input),
@@ -144,7 +144,7 @@ describe("JSONParser", () => {
       });
     });
 
-    it(`throws a SyntaxError with "Lack of decimal part" against "0."`, () => {
+    it('throws a SyntaxError with "Lack of decimal part" against "0."', () => {
       const input = "0.";
       assertThrows(
         () => parseJSON(input),
@@ -250,7 +250,7 @@ describe("JSONParser", () => {
         assertThrows(
           () => parseJSON(input),
           SyntaxError,
-          `Unexpected token ";"`,
+          'Unexpected token ";"',
         );
         assertThrows(() => JSON.parse(input), SyntaxError);
       });
@@ -258,6 +258,109 @@ describe("JSONParser", () => {
   });
 
   describe("parseObject()", () => {
+    [
+      "{}",
+      "{ }",
+      '{ "":1}',
+      '{"" :1}',
+      '{"": 1}',
+      '{"":1 }',
+      '{"a":1 ,"b":2}',
+      '{"a":1, "b":2}',
+      '{"a":1,"b":2}',
+    ].forEach((input) => {
+      it(`parses the object "${input}"`, () => {
+        const output = parseJSON(input);
+        const expected = JSON.parse(input);
+        assertEquals(output, expected);
+      });
+    });
+
+    [
+      "{:1}",
+      "{a:1}",
+      '{"":1,:2}',
+      '{"a":1,b:2}',
+    ].forEach((input) => {
+      it(`throws a SyntaxError with "Lack of quote" against "${input}"`, () => {
+        assertThrows(
+          () => parseJSON(input),
+          SyntaxError,
+          "Lack of quote",
+        );
+        assertThrows(() => JSON.parse(input), SyntaxError);
+      });
+    });
+
+    [
+      '{""',
+      '{"a":1,"b"',
+    ].forEach((input) => {
+      it(`throws a SyntaxError with "Lack of colon" against "${input}"`, () => {
+        assertThrows(
+          () => parseJSON(input),
+          SyntaxError,
+          "Lack of colon",
+        );
+        assertThrows(() => JSON.parse(input), SyntaxError);
+      });
+    });
+
+    [
+      '{"";',
+      '{"";1}',
+    ].forEach((input) => {
+      it(`throws a SyntaxError with "Unexpected token" against "${input}"`, () => {
+        assertThrows(
+          () => parseJSON(input),
+          SyntaxError,
+          'Unexpected token ";"',
+        );
+        assertThrows(() => JSON.parse(input), SyntaxError);
+      });
+    });
+
+    [
+      '{"":',
+      '{"a":1,"b":',
+    ].forEach((input) => {
+      it(`throws a SyntaxError with "Unexpected end of input" against "${input}"`, () => {
+        assertThrows(
+          () => parseJSON(input),
+          SyntaxError,
+          "Unexpected end of input",
+        );
+        assertThrows(() => JSON.parse(input), SyntaxError);
+      });
+    });
+
+    [
+      '{"":1',
+      '{"a":1,"b":2',
+    ].forEach((input) => {
+      it(`throws a SyntaxError with "Lack of closing brace" against "${input}"`, () => {
+        assertThrows(
+          () => parseJSON(input),
+          SyntaxError,
+          "Lack of closing brace",
+        );
+        assertThrows(() => JSON.parse(input), SyntaxError);
+      });
+    });
+
+    [
+      '{"":1;',
+      '{"a":1;"b":2}',
+    ].forEach((input) => {
+      it(`throws a SyntaxError with "Unexpected token" against "${input}"`, () => {
+        assertThrows(
+          () => parseJSON(input),
+          SyntaxError,
+          'Unexpected token ";"',
+        );
+        assertThrows(() => JSON.parse(input), SyntaxError);
+      });
+    });
   });
 });
 

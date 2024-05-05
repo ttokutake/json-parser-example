@@ -5,9 +5,59 @@ import { describe, it } from "$std/testing/bdd.ts";
 
 describe("JSONParser", () => {
   describe("parseNull()", () => {
+    it("parses null", () => {
+      const input = "null";
+      const output = parseJSON(input);
+      const expected = JSON.parse(input);
+      assertEquals(output, expected);
+    });
+
+    [
+      "n",
+      "nu",
+      "nul",
+    ].forEach((input) => {
+      it(`throws a SyntaxError with 'Unexpected token "${input}"'`, () => {
+        assertThrows(
+          () => parseJSON(input),
+          SyntaxError,
+          `Unexpected token "${input}"`,
+        );
+        assertThrows(() => JSON.parse(input), SyntaxError);
+      });
+    });
   });
 
   describe("parseBoolean()", () => {
+    [
+      "true",
+      "false",
+    ].forEach((input) => {
+      it(`parses boolean "${input}"`, () => {
+        const output = parseJSON(input);
+        const expected = JSON.parse(input);
+        assertEquals(output, expected);
+      });
+    });
+
+    [
+      "t",
+      "tr",
+      "tru",
+      "f",
+      "fa",
+      "fal",
+      "fals",
+    ].forEach((input) => {
+      it(`throws a SyntaxError with 'Unexpected token "${input}"'`, () => {
+        assertThrows(
+          () => parseJSON(input),
+          SyntaxError,
+          `Unexpected token "${input}"`,
+        );
+        assertThrows(() => JSON.parse(input), SyntaxError);
+      });
+    });
   });
 
   describe("parseNumber()", () => {
@@ -54,7 +104,7 @@ describe("JSONParser", () => {
       });
     });
 
-    it(`throws an SyntaxError with "Minus sign alone" against "-"`, () => {
+    it(`throws a SyntaxError with "Minus sign alone" against "-"`, () => {
       const input = "-";
       assertThrows(
         () => parseJSON(input),
@@ -70,7 +120,7 @@ describe("JSONParser", () => {
       "-00",
       "-01",
     ].forEach((input) => {
-      it(`throws an SyntaxError with "Unneeded leading zero" against "${input}"`, () => {
+      it(`throws a SyntaxError with "Unneeded leading zero" against "${input}"`, () => {
         assertThrows(
           () => parseJSON(input),
           SyntaxError,
@@ -80,7 +130,7 @@ describe("JSONParser", () => {
       });
     });
 
-    it(`throws an SyntaxError with "Lack of decimal part" against "0."`, () => {
+    it(`throws a SyntaxError with "Lack of decimal part" against "0."`, () => {
       const input = "0.";
       assertThrows(
         () => parseJSON(input),
@@ -111,7 +161,7 @@ describe("JSONParser", () => {
       '"\\a"',
       '"\\\\\\a"',
     ].forEach((input) => {
-      it(`throws an SyntaxError with "Escape character exists" against "${input}"`, () => {
+      it(`throws a SyntaxError with "Escape character exists" against "${input}"`, () => {
         assertThrows(
           () => parseJSON(input),
           SyntaxError,
@@ -125,7 +175,7 @@ describe("JSONParser", () => {
       '"',
       '"a',
     ].forEach((input) => {
-      it(`throws an SyntaxError with "Closing quote not exist" against "${input}"`, () => {
+      it(`throws a SyntaxError with "Closing quote not exist" against "${input}"`, () => {
         assertThrows(
           () => parseJSON(input),
           SyntaxError,

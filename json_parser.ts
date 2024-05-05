@@ -1,10 +1,17 @@
 export type JsonObject =
   | null
+  | boolean
   | number
   | string
   | { [key: string]: JsonObject }
   | JsonObject[];
 
+const NULL = "null";
+const NULL_START = "n";
+const TRUE = "true";
+const TRUE_START = "t";
+const FALSE = "false";
+const FALSE_START = "f";
 const QUOTE = '"';
 const ELEMENT_DELIMITER = ",";
 const ARRAY_START = "[";
@@ -31,6 +38,12 @@ class JSONParser {
     return this.json.charAt(this.index++);
   }
 
+  private readChars(count: number) {
+    const s = this.json.slice(this.index, this.index + count);
+    this.index += Math.max(count, this.json.length - this.index);
+    return s;
+  }
+
   private skipChar() {
     this.index++;
   }
@@ -42,11 +55,19 @@ class JSONParser {
   }
 
   private parseNull() {
-    // TODO
+    const s = this.readChars(4);
+    if (s !== NULL) {
+      throw new SyntaxError(`Unexpected token "${s}"`);
+    }
+    return null;
   }
 
   private parseBoolean() {
-    // TODO
+    const s = this.readChars(this.getChar() === TRUE_START ? 4 : 5);
+    if (![TRUE, FALSE].includes(s)) {
+      throw new SyntaxError(`Unexpected token "${s}"`);
+    }
+    return s === TRUE ? true : false;
   }
 
   private parseNumber() {
@@ -178,7 +199,12 @@ class JSONParser {
         return this.parseArray();
       case QUOTE:
         return this.parseString();
-      // TODO: null, true, false, 0-9
+      case NULL_START:
+        return this.parseNull();
+      case TRUE_START:
+      case FALSE_START:
+        return this.parseBoolean();
+      // TODO: 0-9 & -
       default:
         return this.parseNumber();
     }

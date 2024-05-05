@@ -29,6 +29,10 @@ class JSONParser {
     return this.json.charAt(this.index);
   }
 
+  private getRestChars() {
+    return this.json.slice(this.index);
+  }
+
   private readChar() {
     return this.json.charAt(this.index++);
   }
@@ -44,8 +48,9 @@ class JSONParser {
   }
 
   private skipWhitespaces() {
-    while (this.isInProgress() && this.getChar().match(/^\s$/)) {
-      this.index++;
+    const result = this.getRestChars().match(/^\s*/);
+    if (result) {
+      this.index += result[0].length;
     }
   }
 

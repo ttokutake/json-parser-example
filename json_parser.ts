@@ -12,11 +12,8 @@ const FALSE_START = "f";
 const MINUS = "-";
 const NUMBER_REGEX = /^\d$/;
 const QUOTE = '"';
-const ELEMENT_DELIMITER = ",";
 const ARRAY_START = "[";
-const ARRAY_END = "]";
 const OBJECT_START = "{";
-const OBJECT_END = "}";
 
 class JSONParser {
   private index: number;
@@ -142,7 +139,7 @@ class JSONParser {
 
     const a: JsonObject[] = [];
 
-    if (this.getChar() === ARRAY_END) {
+    if (this.getChar() === "]") {
       this.skipChar();
       return a; // 空の配列
     }
@@ -156,10 +153,10 @@ class JSONParser {
       }
 
       const c = this.readChar();
-      if (c === ARRAY_END) {
+      if (c === "]") {
         break;
       }
-      if (c !== ELEMENT_DELIMITER) {
+      if (c !== ",") {
         throw new SyntaxError(`Unexpected token "${c}"`);
       }
     }
@@ -173,7 +170,7 @@ class JSONParser {
 
     const o: JsonObject = {};
 
-    if (this.getChar() === OBJECT_END) {
+    if (this.getChar() === "}") {
       this.skipChar();
       return o; // 空のオブジェクト
     }
@@ -203,10 +200,10 @@ class JSONParser {
       }
 
       const c = this.readChar();
-      if (c === OBJECT_END) {
+      if (c === "}") {
         break;
       }
-      if (c !== ELEMENT_DELIMITER) {
+      if (c !== ",") {
         throw new SyntaxError(`Unexpected token "${c}"`);
       }
     }

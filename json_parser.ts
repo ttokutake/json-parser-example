@@ -189,11 +189,18 @@ class JSONParser {
       if (c === '"') {
         break;
       }
+      // TODO: 制御文字のチェック
+      // 制御文字一覧: 0, b, f, n, r, t, u, v
+      // \u の扱いが難しい...
+      // > JSON.parse('"\n"')
+      // Uncaught SyntaxError: Bad control character in string literal in JSON at position 1 (line 1 column 2)
       if (c === "\\") {
         if (!["\\", '"'].includes(this.getChar())) {
           throw new SyntaxError("Escape character exists");
         }
         // TODO: 制御文字のチェック
+        // > JSON.parse('"\\n"')
+        // "\n"
         // > JSON.parse('"\\a"')
         // Uncaught SyntaxError: Bad escaped character in JSON at position 2 (line 1 column 3)
         s += this.readChar();

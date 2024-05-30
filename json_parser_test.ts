@@ -279,6 +279,7 @@ describe("JSONParser", () => {
     [
       "{:1}",
       "{a:1}",
+      '{"a":1,}',
       '{"":1,:2}',
       '{"a":1,b:2}',
     ].forEach((input) => {
@@ -365,12 +366,48 @@ describe("JSONParser", () => {
 });
 
 describe("parseJSON()", () => {
-  // TODO: "{}{}", "{} ", 全部の型を含めるinput, "a", "(", ""
   it("parses a JSON string", () => {
-    const input =
-      '{"name":"John Doe","age":30,"city":"Tokyo","hobbies":["reading","hiking","coding"]}';
+    const input = `
+      {
+        "name": "json-parser-example",
+        "isProductionReady": false,
+        "version": 0.1,
+        "options": ["--help", "--verbose"],
+        "dependencies": null
+      }
+    `;
     const output = parseJSON(input);
     const expected = JSON.parse(input);
     assertEquals(output, expected);
+  });
+
+  it('throws a SyntaxError with "Unexpected end of input"', () => {
+    const input = "";
+    assertThrows(
+      () => parseJSON(input),
+      SyntaxError,
+      "Unexpected end of input",
+    );
+    assertThrows(() => JSON.parse(input), SyntaxError);
+  });
+
+  it('throws a SyntaxError with "Unexpected token "a""', () => {
+    const input = "a";
+    assertThrows(
+      () => parseJSON(input),
+      SyntaxError,
+      'Unexpected token "a"',
+    );
+    assertThrows(() => JSON.parse(input), SyntaxError);
+  });
+
+  it('throws a SyntaxError with "Unexpected token "{""', () => {
+    const input = "{}{}";
+    assertThrows(
+      () => parseJSON(input),
+      SyntaxError,
+      'Unexpected token "{"',
+    );
+    assertThrows(() => JSON.parse(input), SyntaxError);
   });
 });

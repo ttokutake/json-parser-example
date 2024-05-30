@@ -70,7 +70,7 @@ class JSONParser {
 
   private readChars(count: number) {
     const s = this.json.slice(this.index, this.index + count);
-    this.index += Math.max(count, this.json.length - this.index);
+    this.index += Math.min(count, this.json.length - this.index);
     return s;
   }
 
@@ -338,11 +338,20 @@ class JSONParser {
     }
 
     const c = this.getChar();
-    throw new SyntaxError(`Unexpected token ${c}`);
+    throw new SyntaxError(`Unexpected token "${c}"`);
+  }
+
+  assertEndOfInput() {
+    const result = this.getRestChars().match(/\S/);
+    if (result) {
+      throw new SyntaxError(`Unexpected token "${result[0]}"`);
+    }
   }
 }
 
 export function parseJSON(json: string) {
   const p = new JSONParser(json);
-  return p.parseValue();
+  const result = p.parseValue();
+  p.assertEndOfInput();
+  return result;
 }
